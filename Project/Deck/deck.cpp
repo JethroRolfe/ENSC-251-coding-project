@@ -1,44 +1,83 @@
 //
-// Created by Jet on 11/2/2026.
-//
-
-#include "../deck.hpp"
-
-//
 // Created by jet on 9/28/26.
 //
-#include "deck.hpp"
+#include "Deck.hpp"
 
-#include "Card/card.hpp"
+#include "singularLinkedList.hpp"
 
-//Default constructor, (0 cards)
-Deck::Deck() {}
+//Default constructor, Creates an empty deck (0 cards)
+Deck::Deck() : cardList(nullptr), head(cardList.getHead()), numCards(0) {
+}
 
 //Deep copies a Deck with =
-Deck &Deck::operator=(const deck &other) {
+Deck &Deck::operator=(const Deck &other) {
     if (this != &other) {
-        singularLinkedList::clear();
-        singularLinkedList::fromother(other);
+        cardList.clear();
+        for (Node<Card> *temp = other.head; temp != nullptr; temp = temp->next)
+            cardList.insertAtTail(temp->data);
+        syncHead();
+        numCards = other.numCards;
     }
     return *this;
 }
 
 //Deep copies a Deck with copy constructor
-Deck::Deck(Deck const &other) {
-    singularLinkedList::copyfrom(other);
+Deck::Deck(Deck const &other) : cardList(nullptr), head(nullptr), numCards(other.numCards) {
+    for (Node<Card> *temp = other.head; temp != nullptr; temp = temp->next)
+        cardList.insertAtTail(temp->data);
+    syncHead();
 }
 
 //Destructor
-deck::~deck() {}
+Deck::~Deck() {
+}
 
+//Checks if deck is Empty
+bool Deck::isEmpty() const {
+    return (numCards == 0 || cardList.isEmpty());
+}
+
+//Gets num of Cards in a deck
+int Deck::getNumCards() const { return numCards; }
+
+//Draws the top card and return a card object
+[[nodiscard]] Card Deck::drawTopCard() {
+    if (cardList.isEmpty()) {
+        std::cout << "You tried to draw a Card with 0 Cards available \n";
+        return Card();
+    }
+    Card c = head->data;
+    cardList.deleteFromHead();
+    syncHead();
+    numCards--;
+    return c;
+}
+
+//adds a specific card to the deck
+bool Deck::addCard(Card c) {
+    cardList.insertAtHead(c);
+    syncHead();
+    numCards++;
+    return true;
+}
 
 //Prints the whole deck
-void deck::printDeck(std::ostream &outs) const {
-    if (CardSystem::isEmpty()) {
-        outs << "(empty)\n";
-        return;
-    }
+void Deck::printDeck(std::ostream &outs) const {
     int i = 1;
-    for (Node *temp = head; temp != nullptr; temp = temp->next)
-        outs << i++ << ". " << temp->card << "\n";
+    for (Node<Card> *temp = head; temp != nullptr; temp = temp->next)
+        outs << i++ << ". " << temp->data << "\n";
+}
+
+//Returns the highest card in the deck (AceHigh is in rankValue in Card)
+Card Deck::findHighCard() const {
+    if (head == nullptr) return Card();
+    Card highest = head->data;
+    for (Node<Card> *temp = head->next; temp != nullptr; temp = temp->next)
+        if (temp->data > highest) highest = temp->data;
+    return highest;
+}
+
+//syncs head with the private head
+void Deck::syncHead() {
+    head = cardList.getHead();
 }

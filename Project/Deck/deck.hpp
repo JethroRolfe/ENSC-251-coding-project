@@ -1,19 +1,27 @@
 //
-// Created by Jet on 11/2/2026.
+// Created by jet on 9/28/26.
 //
+#ifndef LAB2_DECK_HPP
+#define LAB2_DECK_HPP
 
-#ifndef PROJECT_DECK_HPP
-#define PROJECT_DECK_HPP
-#include "Card/CardSystems/cardSystem.hpp"
+#include "Card.hpp"
+#include "Card/singularLinkedList.hpp"
 
+class Deck {
+private:
+    singularLinkedList<Card> cardList;
+    Node<Card> *head;
+    int numCards;
 
-class Deck : public CardSystem {
+    //syncs head with the private head
+    void syncHead();
 
+public:
     //Default constructor
     Deck();
 
     //Deep copies a Deck with =
-    Deck &operator=(const deck &other);
+    Deck &operator=(const Deck &other);
 
     //Deep copies a Deck with copy constructor
     Deck(Deck const &other);
@@ -21,10 +29,22 @@ class Deck : public CardSystem {
     //Destructor
     ~Deck();
 
+    [[nodiscard]] bool isEmpty() const;
+
+    //Getter
+    [[nodiscard]] int getNumCards() const;
+
+    //Draw Top card (the head)
+    Card drawTopCard();
+
+    //Adds a card at the top (the head)
+    bool addCard(Card c);
+
     //Prints the Deck
     void printDeck(std::ostream &outs) const;
 
+    //Returns the highest card in the deck
+    Card findHighCard() const;
 };
 
-
-#endif //PROJECT_DECK_HPP
+#endif //LAB2_DECK_HPP
