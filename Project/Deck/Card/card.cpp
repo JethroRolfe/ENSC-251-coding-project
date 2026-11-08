@@ -5,7 +5,7 @@
 #include <string>
 
 //enum to string Suit
-const char *card::to_string(const Suit s) {
+const char *Card::to_string(const Suit s) {
     switch (s) {
         case Suit::Clubs: return "Clubs";
         case Suit::Diamonds: return "Diamonds";
@@ -16,7 +16,7 @@ const char *card::to_string(const Suit s) {
 }
 
 //enum to string Rank
-const char *card::to_string(const Rank r) {
+const char *Card::to_string(const Rank r) {
     switch (r) {
         case Rank::Ace: return "Ace";
         case Rank::Two: return "2";
@@ -37,21 +37,21 @@ const char *card::to_string(const Rank r) {
 
 
 //Default constructor, Rank: Ace, Suit: Spades
-card::card() : rank(static_cast<int>(Rank::Ace)), suit(static_cast<int>(Suit::Spades)) {
+Card::Card() : rank(static_cast<int>(Rank::Ace)), suit(static_cast<int>(Suit::Spades)) {
 }
 
 //Card constructor, with isValid check on rank and suit
-card::card(const int r, const int s) : rank(r), suit(s) {
+Card::Card(const int r, const int s) : rank(r), suit(s) {
     (void) isValid();
 }
 
 //Checks if Card is a Face Card
-bool card::isFaceCard() const {
+bool Card::isFaceCard() const {
     return (rank >= 11 && rank <= 13);
 }
 
 //Checks if both Suit and Rank is valid
-bool card::isValid() const {
+bool Card::isValid() const {
     if (rank < 1 || rank > 13 || suit < 0 || suit > 3) {
         std::cerr << "ERROR: Invalid card parameters (Rank: " << rank << ", Suit: " << suit << ")\n";
         return false;
@@ -60,7 +60,7 @@ bool card::isValid() const {
 }
 
 //Rank Value for AceHigh
-int card::rankValue() const {
+int Card::rankValue() const {
 #ifdef ACE_HIGH
     if (rank == (static_cast<int>(Rank::Ace))) return 14;
 #endif
@@ -68,18 +68,18 @@ int card::rankValue() const {
 }
 
 //overload of <,> and ==
-bool card::operator==(const card &other) const {
+bool Card::operator==(const Card &other) const {
     return rank == other.rank && suit == other.suit;
 }
 
-bool card::operator>(const card &other) const {
+bool Card::operator>(const Card &other) const {
     if (rankValue() != other.rankValue()) {
         return rankValue() > other.rankValue();
     }
     return suit > other.suit;
 }
 
-bool card::operator<(const card &other) const {
+bool Card::operator<(const Card &other) const {
     if (rankValue() != other.rankValue()) {
         return rankValue() < other.rankValue();
     }
@@ -90,7 +90,7 @@ bool card::operator<(const card &other) const {
 
 //Reads a card in the format "[Rank] of [Suit]"
 //if input !isValid Recall the operator
-std::istream &operator>>(std::istream &ins, card &c) {
+std::istream &operator>>(std::istream &ins, Card &c) {
     std::string rankText, ofText, suitText;
     if (!(ins >> rankText >> ofText >> suitText)) return ins;
 
@@ -98,13 +98,13 @@ std::istream &operator>>(std::istream &ins, card &c) {
     int newSuit = -1;
 
     for (int i = 1; i <= 13; i++) {
-        if (rankText == card::to_string(static_cast<Rank>(i))) {
+        if (rankText == Card::to_string(static_cast<Rank>(i))) {
             newRank = i;
         }
     }
 
     for (int i = 0; i <= 3; i++) {
-        if (suitText == card::to_string(static_cast<Suit>(i))) {
+        if (suitText == Card::to_string(static_cast<Suit>(i))) {
             newSuit = i;
         }
     }
@@ -115,13 +115,13 @@ std::istream &operator>>(std::istream &ins, card &c) {
         return ins >> c;
     }
 
-    c = card(newRank, newSuit);
+    c = Card(newRank, newSuit);
     return ins;
 }
 
 //Outputs [Rank] of [Suit] for a Card
-std::ostream &operator<<(std::ostream &outs, const card &c) {
-    outs << card::to_string(static_cast<Rank>(c.rank)) << " of "
-            << card::to_string(static_cast<Suit>(c.suit));
+std::ostream &operator<<(std::ostream &outs, const Card &c) {
+    outs << Card::to_string(static_cast<Rank>(c.rank)) << " of "
+            << Card::to_string(static_cast<Suit>(c.suit));
     return outs;
 }

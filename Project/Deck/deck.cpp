@@ -1,9 +1,9 @@
 //
 // Created by jet on 9/28/26.
 //
-#include "Deck.hpp"
+#include "deck.hpp"
 
-#include "singularLinkedList.hpp"
+#include "Card/singularLinkedList.hpp"
 
 //Default constructor, Creates an empty deck (0 cards)
 Deck::Deck() : cardList(nullptr), head(cardList.getHead()), numCards(0) {
