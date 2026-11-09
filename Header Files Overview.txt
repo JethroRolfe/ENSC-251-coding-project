@@ -1,0 +1,110 @@
+PRELIMINARY HEADER FILES: RAT-A-TAT CAT (ENSC 251)
+==================================================
+
+The game is split into 9 header files across three folders: Deck, Player
+and GameManager. Each class has one job, and the classes are built from each
+other. GameManager owns the players and the decks, each Player owns a hand and
+a set of rules, and the decks are built from cards stored in a linked list.
+
+
+DECK FOLDER: THE CARDS
+----------------------
+
+singularLinkedList.hpp
+  - A template linked list (Node<T> and singularLinkedList<T>) from Jethro's
+    labs. It stores the cards for the Deck and PlayHand classes.
+
+card.hpp
+  - Stores one playing card as a rank and a suit.
+  - Adds a Joker rank to Lab 1's card, because the game uses Ace to 10 plus
+    2 Jokers.
+  - getPoints() gives a card's value: Joker = 0, Ace = 1, 2-10 = face value.
+    Power cards have no value.
+  - isFaceCard() tells whether the card is a Jack, Queen or King, which are
+    the power cards.
+  - Keeps the comparison and stream operators from Lab 1.
+
+deck.hpp
+  - A pile of cards, from Lab 2, stored in a linked list where the top card
+    is the head.
+  - genCards() builds the deck: Ace-10 of each suit plus 2 Jokers, and J/Q/K
+    too when power cards are on.
+  - Also has shuffle(), drawTopCard(), addCard() and peekCard().
+  - setNumCard() is private, because a deck is only ever empty or full.
+
+DeckManager.hpp
+  - Holds two Deck objects: the face-down draw pile and the face-up discard
+    pile.
+  - Handles the set-up steps from the official rules: building and shuffling
+    the deck, cutting it, and turning over the first discard. If that discard
+    is a power card, it goes back in the deck and another card is turned over.
+  - Hands cards to players from either pile, takes discards, and shows the
+    discard pile.
+  - When the draw pile runs out, it shuffles the discard pile into a new
+    draw pile.
+
+
+PLAYER FOLDER: THE PEOPLE (AND BOTS)
+------------------------------------
+
+PlayHand.hpp
+  - Stores a player's 4 face-down cards in a linked list, at positions 0-3.
+    The two outer cards are positions 0 and 3.
+  - Can replace a card (handing back the old one), look at a card without
+    changing it, and clear the hand at the end of a round.
+  - Can show the hand hidden or face up.
+
+player.hpp
+  - Stores a player's name, their PlayHand, their GameRules object and their
+    total score.
+  - ruleCheck() passes a drawn card to the game rules.
+  - scoreCheck() adds up the hand's points at the end of a round.
+  - isOut() tells whether the player has reached the score limit.
+  - Its input functions are chooseDrawSource(), chooseCardPosition() and
+    askYesNo(). They are virtual so a Bot can answer them itself instead of
+    asking a person.
+
+Bot.hpp
+  - A computer player (a planned extension) that inherits Player.
+  - Answers the same questions using its own rules, and remembers the cards
+    it has seen in its own hand.
+  - The exact rules the bot follows are still to be decided.
+
+
+GAMEMANAGER FOLDER: RUNNING THE GAME
+------------------------------------
+
+GameRules.hpp
+  - Holds the rules for using a card. Each Player has its own GameRules
+    object.
+  - A card taken from the discard pile must replace one of the player's
+    cards.
+  - A card from the draw pile can replace a card, be discarded, or use its
+    power.
+  - The power cards are Peek, Swap and Draw 2 (proposed: Jack, Queen, King).
+    Draw 2 repeats if you draw another Draw 2.
+  - At the end of a round, any power cards in a hand are replaced from the
+    draw pile.
+  - explainCard() and explainRules() print help text. Power cards can be
+    turned off for the minimum viable game.
+
+GameManager.hpp
+  - Runs the whole game and decides whose turn it is.
+  - Holds 2-3 players as a dynamic array of Player pointers, so the same
+    array can also hold Bots. Its destructor deletes them.
+  - Owns the DeckManager.
+  - Each round, it deals 4 cards to each player, lets players peek at their
+    outer cards once, and runs turns clockwise until someone knocks. Every
+    other player then gets one more turn, and the round is scored. The deal
+    moves left after each round.
+  - Before each turn it clears the screen and asks the next player to press
+    Enter to confirm it's them, so no one sees another player's cards.
+  - Proposed: a player who reaches 100 points is out, and the last player
+    left wins.
+
+
+STILL TO BE DECIDED BY THE GROUP
+--------------------------------
+  - Which power card is Peek, Swap and Draw 2.
+  - The end-of-game rule.
+  - The bot's rules.
