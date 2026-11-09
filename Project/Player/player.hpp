@@ -18,6 +18,18 @@
 #include <string>
 #include "PlayHand.hpp"
 
+//Why a position or a yes/no answer is being asked for. Lets Bot answer
+//without reading the prompt text.
+enum class Ask : int {
+    PeekPos,         // Peek: which of your cards to look at
+    SwapOwnPos,      // Swap: which of your cards to give away
+    SwapOpponentPos, // Swap: which of the opponent's cards to take
+    Reorder,         // initial peek: do you want to reorder your cards?
+    ReorderFrom,     // initial peek: first position to swap
+    ReorderTo,       // initial peek: second position to swap
+    ShuffleRequest,  // first player: request a shuffle before any card is drawn?
+};
+
 class Player {
 public:
     //Default constructor
@@ -57,13 +69,14 @@ public:
     [[nodiscard]] virtual int swapCardWith();
 
     //Asks for one of the player's positions 1-4 (Peek, Swap, reordering)
-    [[nodiscard]] virtual int choosePosition(const std::string &prompt);
+    [[nodiscard]] virtual int choosePosition(Ask why, const std::string &prompt);
 
-    //Swap: asks which other player to swap with; returns their index
+    //Swap: asks which other player to swap with; returns their index,
+    //or -1 to skip the swap (swapping is optional)
     [[nodiscard]] virtual int chooseOpponent(Player **players, int numPlayers, int self);
 
-    //Yes/no questions: shuffle request, reorder at the peek, use Swap
-    [[nodiscard]] virtual bool askYesNo(const std::string &question);
+    //Yes/no questions: shuffle request, reorder at the peek
+    [[nodiscard]] virtual bool askYesNo(Ask why, const std::string &question);
 
     //Asks if the player knocks (ends the round) at the end of their turn
     [[nodiscard]] virtual bool knock();

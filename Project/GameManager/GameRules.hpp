@@ -64,6 +64,8 @@ private:
 
     //Swap: the Swap card is discarded; optionally switch one of your cards with any
     //card of another player without looking. Both positions become unknown.
+    //Order of questions: chooseOpponent (-1 = skip), choosePosition(Ask::SwapOwnPos),
+    //choosePosition(Ask::SwapOpponentPos).
     void swap(Player **players, int numPlayers, int current) const;
 
     //Draw 2: draw 2 cards, each from the discard pile (must be swapped in) or the
