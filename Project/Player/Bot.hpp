@@ -1,10 +1,11 @@
 //
 // Bot: a computer-controlled player (planned extension).
-// Inherits Player and answers the IO functions with its own list of rules
-// instead of asking a person (group decision 11/7).
+// Inherits Player and answers the input functions with its own rules instead
+// of asking a person. It only uses the cards it knows (PlayHand::isKnown).
 //
-// TODO (group): decide the bot's list of rules, e.g. when to take the
-// discard, when to replace a card, when to use a power, when to knock.
+// Rules: bots only knock on their first turn if their known cards are low.
+// TODO (group): decide the rest of the bot's rules (when to take the discard,
+// when to replace a card, when to use a power).
 //
 #ifndef PROJECT_BOT_HPP
 #define PROJECT_BOT_HPP
@@ -19,22 +20,28 @@ public:
     //Destructor (no dynamic memory)
     ~Bot() override = default;
 
-    //Picks the discard pile or the draw pile using the bot's rules
-    [[nodiscard]] int chooseDrawSource(const Card &topDiscard) const override;
+    [[nodiscard]] bool isBot() const override;
 
-    //Picks which of its cards to use using the bot's rules
-    [[nodiscard]] int chooseCardPosition(const std::string &prompt) const override;
+    [[nodiscard]] DeckChoice whichDeck(const Card &topDiscard) override;
 
-    //Answers yes/no questions using the bot's rules
-    [[nodiscard]] bool askYesNo(const std::string &question) const override;
+    [[nodiscard]] int swapCardPos(const Card &drawn, bool mustReplace) override;
 
-    //Stores a card the bot has seen in its own hand (outer cards, Peek, replacing)
-    void remember(int pos, const Card &card) override;
+    [[nodiscard]] int swapCardWith() override;
+
+    [[nodiscard]] int choosePosition(const std::string &prompt) override;
+
+    [[nodiscard]] int chooseOpponent(Player **players, int numPlayers, int self) override;
+
+    [[nodiscard]] bool askYesNo(const std::string &question) override;
+
+    [[nodiscard]] bool knock() override;
 
 private:
-    //What the bot knows about its own four cards; known[i] is false if it has not seen card i
-    Card memory[PlayHand::HAND_SIZE];
-    bool known[PlayHand::HAND_SIZE];
+    //Known card with the highest value, or an unknown position if any (1-4)
+    [[nodiscard]] int worstKnownPos() const;
+
+    //Sum of the known cards, used to decide when to knock
+    [[nodiscard]] int knownScore() const;
 };
 
 #endif //PROJECT_BOT_HPP

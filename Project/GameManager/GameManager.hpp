@@ -1,37 +1,37 @@
 //
 // Created by Jet on 11/7/2026.
 //
-// GameManager: uses objects of Player, as many as players in the game.
-// Manages the game and decides whose turn it is (group doc).
-// Minimum viable game: 2 player local game played in the terminal.
+// GameManager: manages the game. Decides whose turn it is, the winner, and setup.
+// Owns the players, the DeckManager and the GameRules.
 //
-// Group decisions (11/7):
-//  - 2 to 3 players (official rules allow 2-6; capped at 3 because of
-//    hot-seat play on one keyboard and terminal).
-//  - Hidden cards: "It's Player 2's turn, press Enter to confirm you are Player 2"
-//    before each turn (also goes in Technical Challenges in the design doc).
-//  - Players array holds Player pointers so it can also hold Bots.
-//
-// PROPOSED (still undecided by the group):
-//  - End of game: official option 3. A player who reaches 100 points is out;
-//    the last player left in the game is the winner (Jethro: "players dropping
-//    out is cool, it's more competitive").
+// Rules used here:
+//  - The game deals and keeps score. Player 1 goes first; each new round the
+//    first player moves on by one (bots included).
+//  - Everyone sees every peek, so cards are not hidden between turns.
+//  - The first player may request one shuffle per round, before any card is drawn.
+//  - At the initial peek each player sees their two outer cards and may reorder
+//    their cards once.
+//  - Knocking: only at the end of your own turn; after a knock every other player
+//    has one more turn, then the round ends.
+//  - A player whose total reaches scoreLimit is out; the last player in wins.
+//    With 2 players the game ends as soon as one is out; if both pass the limit in
+//    the same round, the lower total wins.
 //
 #ifndef PROJECT_GAMEMANAGER_HPP
 #define PROJECT_GAMEMANAGER_HPP
 
 #include "../Player/player.hpp"
 #include "../Deck/DeckManager.hpp"
+#include "GameRules.hpp"
 
 class GameManager {
 public:
     static const int MIN_PLAYERS = 2;
-    static const int MAX_PLAYERS = 3;
-    static const int SCORE_LIMIT = 100;
+    static const int MAX_PLAYERS = 6;       // official rules allow 2-6
+    static const int DEFAULT_SCORE_LIMIT = 100;
 
-    //Creates numPlayers players (MIN_PLAYERS to MAX_PLAYERS).
-    //powerCardsOn = false for the minimum viable game.
-    GameManager(int numPlayers, bool powerCardsOn = false);
+    //powerCardsOn = false for the minimum game
+    explicit GameManager(bool powerCardsOn = false);
 
     //Destructor: deletes every player, then the players array
     ~GameManager();
@@ -41,59 +41,60 @@ public:
 
     GameManager &operator=(const GameManager &) = delete;
 
-    //Runs the whole game: rounds until the game ends, then shows the winner
+    //Sets up the game: number of players, names, and if each one is a bot
+    void setup();
+
+    //Main loop: runs rounds until the game ends, then displays the winner
     void play();
 
+    //Score limit can be changed (rules: play to 100, 200, or any other number)
+    void setScoreLimit(int limit);
+
+    [[nodiscard]] int getScoreLimit() const;
+
 private:
-    Player **players; // dynamic array of numPlayers Player pointers (Player or Bot)
-    int numPlayers;
-    int dealer;       // index of the dealer
-    int current;      // index of the player whose turn it is
-    int knocker;      // index of the player who knocked, -1 if nobody has
-    bool usePowers;
-    DeckManager decks;
+    Player **players;        // array of players (2 in the minimum game), Player or Bot
+    int numPlayers;          // number of players
+    DeckManager deckManager; // the draw and discard piles
+    GameRules rules;         // applies the rules
+    int currentPlayer;       // index of whose turn it is
+    int firstPlayer;         // index of who goes first this round (moves +1 each round)
+    int iAmTheOneWhoKnocks;  // index of who knocked, -1 if nobody has
+    int round;               // current round number
+    int turnsThisRound;      // used to tell if it is a player's first turn of the round
+    int scoreLimit;          // score that, if reached, kicks a player from the game
+    bool easyMode;           // "For Younger Players": known cards are shown
 
-    //Asks each player for their name
-    void setupPlayers();
+    //Calls startNewRound() and deal(), offers the shuffle request, then publicly
+    //shows everyone's peek at their outer cards (positions 1 and 4)
+    void startRound();
 
-    //One round: set-up, turns until a knock, then scoring
-    void playRound();
+    //Rules: the first player can request one shuffle per round before any card is drawn
+    void offerShuffle();
 
-    //Set-up (official rules): shuffle, player left of the dealer cuts,
-    //dealer deals four cards one at a time face down to each player,
-    //then the first card is turned over to start the discard pile
-    void dealCards();
-
-    //Players peek at their two outer cards once, then turn them face down again
+    //Each player peeks at their outer cards (shown to everyone) and may reorder once
     void peekOuterCards();
 
-    //One player's turn: draw from the discard pile or the draw pile,
-    //then Player::ruleCheck. At the end of the turn the player may knock.
-    void takeTurn();
+    //Runs one turn for currentPlayer (discard pile or draw pile through GameRules),
+    //then asks if they knock
+    void playTurn();
 
-    //Decides whose turn is next (play continues to the left / clockwise)
+    //Moves currentPlayer to the next player who is not out
     void nextPlayer();
 
-    //Ending the round (official rules): after a knock every other player has
-    //one more turn, players turn over their cards, replace power cards,
-    //and add the point values of their four cards
+    //Called when the turn comes back to iAmTheOneWhoKnocks: reveals all hands,
+    //replaces power cards, adds scores and first-turn knock penalties, updates
+    //who is out, and moves firstPlayer on by one
     void endRound();
 
-    //The player to the left of the dealer deals the next round
-    void nextDealer();
+    //Collects every card from the hands (the piles are rebuilt by startNewRound)
+    void collectCards();
 
-    //True when only one player is left under SCORE_LIMIT
+    //True when only one player is not out (or none, if both went out together)
     [[nodiscard]] bool isGameOver() const;
 
-    //Shows final scores; the last player left in the game is the winner
-    void announceWinner() const;
-
-    //Clears the screen and shows "It's <name>'s turn, press Enter to confirm
-    //you are <name>", so players cannot see each other's cards
-    void passToNextPlayer() const;
-
-    //Clears the terminal with the ANSI codes "\033[2J\033[H"
-    static void clearScreen();
+    //Prints who won and some stats: placements, scores, worst round
+    void displayWinner() const;
 };
 
 #endif //PROJECT_GAMEMANAGER_HPP

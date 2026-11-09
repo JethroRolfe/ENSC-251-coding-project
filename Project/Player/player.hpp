@@ -1,22 +1,22 @@
 //
 // Created by Jet on 11/2/2026.
 //
-// Player: uses one object of GameRules.
-// Gets a card from the game manager and calls the game rules (group doc).
-// Member functions from the group doc: RuleCheck, ScoreCheck, IO functions.
+// Player: one player in the game. Asks the person for their choices (cin).
+// The input functions are virtual so Bot can inherit Player and answer them
+// with its own rules instead of asking a person.
 //
-// The IO (decision) functions are virtual so Bot can inherit Player and
-// answer them with its own list of rules instead of asking a person
-// (group decision 11/7: "Bot should inherit player").
+// Rules used here:
+//  - Knock tracking: knocking on your first turn of a round is allowed, but each
+//    consecutive first-turn knock adds n to your score (n = number of consecutive
+//    first-turn knocks; the first one is free). The count resets when the player
+//    plays a round without knocking on their first turn.
+//  - A player is out once their total reaches the score limit (GameManager::scoreLimit).
 //
 #ifndef PROJECT_PLAYER_HPP
 #define PROJECT_PLAYER_HPP
 
 #include <string>
 #include "PlayHand.hpp"
-#include "../GameManager/GameRules.hpp"
-
-class DeckManager;
 
 class Player {
 public:
@@ -29,11 +29,6 @@ public:
     //Virtual destructor so a Bot is deleted correctly through a Player pointer
     virtual ~Player() = default;
 
-    //No copying (PlayHand cannot be copied)
-    Player(const Player &) = delete;
-
-    Player &operator=(const Player &) = delete;
-
     //Getters / setters
     [[nodiscard]] std::string getName() const;
 
@@ -45,43 +40,59 @@ public:
 
     [[nodiscard]] int getTotalScore() const;
 
-    //Scorekeeper records each player's score at the end of each round
-    void addToScore(int points);
+    [[nodiscard]] bool getIsOut() const;
 
-    //True once the player's total reaches the score limit (they are out of the game)
-    [[nodiscard]] bool isOut(int scoreLimit) const;
+    [[nodiscard]] virtual bool isBot() const;
 
-    //Reads the card the player got and runs the GameRules on it (group doc: RuleCheck).
-    //fromDiscard = true: the card MUST replace one of the player's cards.
-    //fromDiscard = false: the card may replace a card, use its power, or be discarded.
-    void ruleCheck(const Card &card, bool fromDiscard, DeckManager &decks,
-                   Player **players, int numPlayers);
+    // ---- Input functions (cin). Bot overrides these. ----
 
-    //Adds the point values of the four cards = score for the round (group doc: ScoreCheck)
-    [[nodiscard]] int scoreCheck() const;
+    //Asks the player to draw from the draw pile or the discard pile
+    [[nodiscard]] virtual DeckChoice whichDeck(const Card &topDiscard);
 
-    // ---- IO functions (group doc). Bot overrides these. ----
+    //Asks which position (1-4) to swap the drawn card into, or 0 to discard it.
+    //mustReplace = true (card from the discard pile): 0 is not allowed.
+    [[nodiscard]] virtual int swapCardPos(const Card &drawn, bool mustReplace);
 
-    //Shows the top discard and asks:
-    //1 = take the top card of the discard pile, 2 = draw from the draw pile
-    [[nodiscard]] virtual int chooseDrawSource(const Card &topDiscard) const;
+    //Draw 2: asks which held card to place next, temp 1 or temp 2
+    [[nodiscard]] virtual int swapCardWith();
 
-    //Asks the player to choose one of their four cards; returns position 0-3
-    [[nodiscard]] virtual int chooseCardPosition(const std::string &prompt) const;
+    //Asks for one of the player's positions 1-4 (Peek, Swap, reordering)
+    [[nodiscard]] virtual int choosePosition(const std::string &prompt);
 
-    //Asks a yes/no question (replace or discard, use a power, knock to end the round)
-    [[nodiscard]] virtual bool askYesNo(const std::string &question) const;
+    //Swap: asks which other player to swap with; returns their index
+    [[nodiscard]] virtual int chooseOpponent(Player **players, int numPlayers, int self);
 
-    //Called whenever the player sees one of their own cards (outer cards, Peek,
-    //replacing). Does nothing for a person (they remember it themselves);
-    //Bot overrides it to store the card in its memory.
-    virtual void remember(int pos, const Card &card);
+    //Yes/no questions: shuffle request, reorder at the peek, use Swap
+    [[nodiscard]] virtual bool askYesNo(const std::string &question);
+
+    //Asks if the player knocks (ends the round) at the end of their turn
+    [[nodiscard]] virtual bool knock();
+
+    // ---- Scoring ----
+
+    //Adds the end of round score to the total score and keeps the worst round
+    void addScore(int roundScore);
+
+    //Knock tracking (rules): call once per round. Returns the penalty to add.
+    int recordFirstTurnKnock(bool knockedOnFirstTurn);
+
+    //Sets isOut when totalScore reaches scoreLimit
+    void updateIsOut(int scoreLimit);
+
+    //End screen stats
+    [[nodiscard]] int getWorstRound() const;
+
+protected:
+    //Reads an int from cin between min and max, asking again on invalid input
+    static int readInt(int min, int max);
 
 private:
-    std::string name;
-    PlayHand hand;
-    GameRules rules;
-    int totalScore;
+    std::string name;      // name of player
+    PlayHand hand;         // the player's hand
+    int totalScore;        // total score across rounds
+    bool isOut;            // true once totalScore reaches the score limit
+    int firstTurnKnocks;   // consecutive rounds the player knocked on their first turn
+    int worstRound;        // highest single-round score (end screen)
 };
 
 #endif //PROJECT_PLAYER_HPP

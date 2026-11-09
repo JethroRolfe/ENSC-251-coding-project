@@ -1,12 +1,12 @@
 //
 // Created by Jet on 11/7/2026.
 //
-// GameRules: switch of the cards, with cases on King, Queen, Jack for the powers
-// (group doc). Called by Player::ruleCheck.
-// Power cards are a planned extension; the minimum viable game has none.
+// GameRules: applies the Rat-a-Tat Cat rules to each turn. Owned and used by
+// GameManager (not Player), because Swap needs access to two players' hands.
+// It stores no game state; drawn cards are held in PlayHand's temp locations.
 //
-// Official power cards: Peek, Swap, Draw 2.
-// PROPOSED (still undecided by the group): Jack = Peek, Queen = Swap, King = Draw 2.
+// Power cards are a planned extension; the minimum game has none.
+//   Jack = Peek, Queen = Swap, King = Draw 2.
 //
 #ifndef PROJECT_GAMERULES_HPP
 #define PROJECT_GAMERULES_HPP
@@ -20,7 +20,7 @@ class PlayHand;
 
 class GameRules {
 public:
-    //Constructor (powerCardsOn = false for the minimum viable game)
+    //powerCardsOn = false for the minimum game
     explicit GameRules(bool powerCardsOn = false);
 
     //Destructor (no dynamic memory)
@@ -28,40 +28,53 @@ public:
 
     [[nodiscard]] bool powerCardsOn() const;
 
-    //Card from the discard pile: it MUST replace one of the player's cards.
-    //The replaced card is discarded face up.
-    void useDiscardCard(const Card &card, Player &player, DeckManager &decks) const;
+    //Draws one card from the discard pile. It MUST replace one of the player's
+    //cards; the replaced card is discarded face up. A Power card can be taken
+    //from the discard pile but has no power.
+    void drawFromDiscard(Player &player, DeckManager &decks) const;
 
-    //Card from the draw pile: switch on the card.
-    //Number card: replace one of the player's cards, or discard it.
-    //Jack = Peek, Queen = Swap, King = Draw 2: use its power, or discard it.
-    void useDrawnCard(const Card &card, Player **players, int numPlayers,
-                      int current, DeckManager &decks) const;
+    //Draws one card from the draw pile: the player replaces a card or discards it.
+    //A Power card goes to whatPowerCard().
+    void drawFromDraw(Player **players, int numPlayers, int current, DeckManager &decks) const;
 
-    //End of round: players replace all power cards by drawing from the draw pile.
-    //If another power card is drawn, the player draws again.
+    //Switch on the face cards: Jack = Peek, Queen = Swap, King = Draw 2.
+    //Default: a normal card, which is replaced or discarded.
+    void whatPowerCard(const Card &card, Player **players, int numPlayers, int current,
+                       DeckManager &decks) const;
+
+    //End of round: replaces power cards with the top card of the draw pile.
+    //If another Power card is drawn, it goes to the discard pile and the player draws again.
     void replacePowerCards(PlayHand &hand, DeckManager &decks) const;
 
-    //Explains a specific power card's rule (group doc: explainCard)
+    //Replaces the player's power cards, then returns the hand's value (PlayHand::handScore)
+    int scoreHand(Player &player, DeckManager &decks) const;
+
+    //Explains a specific power card's rule
     void explainCard(const Card &card, std::ostream &outs) const;
 
-    //Explains the player's available options (group doc: explainRules)
+    //Explains the player's available options
     void explainRules(std::ostream &outs) const;
 
 private:
     bool usePowers;
 
-    //Peek: look at any one of your own cards. Turn is over, Peek card is discarded.
+    //Peek: look at any one of your own cards. Everyone sees the peek (rules).
+    //Turn is over, the Peek card is discarded.
     void peek(Player &player) const;
 
-    //Swap: discard the Swap card; optionally switch one of your cards with any card
-    //of another player, without looking at either card. Turn is over.
+    //Swap: the Swap card is discarded; optionally switch one of your cards with any
+    //card of another player without looking. Both positions become unknown.
     void swap(Player **players, int numPlayers, int current) const;
 
-    //Draw 2: draw the next card; use it (forfeit the second draw) OR discard it and
-    //draw a second card, which may be used or discarded. Another Draw 2 starts the
-    //sequence again (calls useDrawnCard again).
+    //Draw 2: draw 2 cards, each from the discard pile (must be swapped in) or the
+    //draw pile, and hold them in the 2 temp locations. Then swap both, discard both,
+    //or swap one and discard the other.
+    //Another Draw 2: the cards already held must be swapped or discarded first,
+    //then the sequence starts again. Peek or Swap: used as one of the 2 draws.
     void drawTwo(Player **players, int numPlayers, int current, DeckManager &decks) const;
+
+    //Asks the player to swap in or discard every card held in the temps
+    void placeTempCards(Player &player, DeckManager &decks) const;
 };
 
 #endif //PROJECT_GAMERULES_HPP

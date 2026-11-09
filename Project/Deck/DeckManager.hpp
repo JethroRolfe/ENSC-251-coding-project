@@ -1,8 +1,12 @@
 //
 // Created by Jet on 11/7/2026.
 //
-// DeckManager: uses 2 Deck objects, the draw pile and the discard pile.
-// Manages the deck (only one deck object) and hands cards to the players.
+// DeckManager: manages the draw and discard pile. It is the only class that
+// moves cards between the piles and the players.
+//
+// Deck size is set with rankSize and suitSize (rules: Contents):
+//   minimum game: rankSize 10 (Ace to 10) x suitSize 4 + 2 Jokers = 42 cards
+//   power cards:  rankSize 13 (adds Jack, Queen, King)          = 54 cards
 //
 #ifndef PROJECT_DECKMANAGER_HPP
 #define PROJECT_DECKMANAGER_HPP
@@ -10,48 +14,66 @@
 #include <iostream>
 #include "deck.hpp"
 
-class DeckManager {
-private:
-    Deck drawPile;    // face down in the middle of the table
-    Deck discardPile; // face up
+class PlayHand;
 
+class DeckManager {
 public:
-    //Constructor (both piles empty)
-    DeckManager();
+    static const int SUIT_SIZE = 4;
+    static const int RANK_SIZE_MIN_GAME = 10; // Ace to 10
+    static const int RANK_SIZE_POWER = 13;    // Ace to King
+    static const int NUM_JOKERS = 2;
+
+    //powerCards = false for the minimum game (42 cards)
+    explicit DeckManager(bool powerCards = false);
 
     //Destructor (each Deck frees its own cards)
     ~DeckManager() = default;
 
-    //Set-up (official rules): collects all cards, generates and shuffles the deck.
-    //includePowerCards = false for the minimum viable game.
-    void newRound(bool includePowerCards);
+    //Changes the deck that startNewRound() builds (custom decks)
+    void setDeckSize(int rankSize, int suitSize, int numJokers);
 
-    //Set-up (official rules): the player to the left of the dealer cuts the cards
-    void cut(int position);
+    //rankSize * suitSize + numJokers
+    [[nodiscard]] int getDeckSize() const;
 
-    //Set-up (official rules): turns over the top card of the draw pile to start
-    //the discard pile. If it is a power card, it goes back in the deck and
-    //another card is turned over.
-    void startDiscardPile();
+    //Empties both piles, builds a new shuffled draw pile with genIndex() + genDeck(),
+    //then flips the top card to start the discard pile. If that card is a Power
+    //card it is placed back in the deck and another card is turned over (rules: Set-up).
+    void startNewRound();
 
-    //Hands the top card of the draw pile to a player.
-    //When the draw pile is used up, the discard pile is shuffled
-    //and turned over for a new draw pile (official rules).
-    Card drawFromDrawPile();
+    //Shuffles the draw pile into a random order
+    void shuffle();
 
-    //Hands the top card of the discard pile to a player
-    Card drawFromDiscardPile();
+    //Deals 4 cards to a player's hand
+    void deal(PlayHand &hand);
 
-    //Puts a card face up on the discard pile
-    void discard(const Card &c);
+    //Draws the top card from the active draw pile (returns + removes it).
+    //Calls refillDrawPile() first if the draw pile is empty.
+    Card drawFromPile();
 
-    //Top card of the discard pile, without taking it
-    [[nodiscard]] Card peekDiscard() const;
+    //Draws the top card from the discard pile (returns + removes it)
+    Card drawFromDiscard();
+
+    //Returns the top card of the discard pile without removing it
+    [[nodiscard]] Card peekAtDiscard() const;
 
     [[nodiscard]] bool discardIsEmpty() const;
 
-    //Shows the discard pile (group doc: displayDiscardPile)
-    void displayDiscardPile(std::ostream &outs) const;
+    //Places a card face up on the discard pile
+    void discard(const Card &c);
+
+    //Rules: when the draw pile runs out, the discard pile except its top card is
+    //shuffled into a new draw pile; the top card stays face up as the discard pile
+    void refillDrawPile();
+
+    //Shows the top of the discard pile
+    void printDiscard(std::ostream &outs) const;
+
+private:
+    Deck drawPile;    // the pile players draw from
+    Deck discardPile; // the face-up pile of discarded cards
+    int rankSize;
+    int suitSize;
+    int numJokers;
 };
 
 #endif //PROJECT_DECKMANAGER_HPP

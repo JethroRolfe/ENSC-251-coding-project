@@ -27,7 +27,7 @@ private:
 
 public:
     //Default constructor
-    singularLinkedList(Node<T> *head = nullptr) : head(nullptr), count(0) {
+    singularLinkedList() : count(0), head(nullptr) {
     }
 
     //Destructor
@@ -67,18 +67,18 @@ public:
         temp->next = newNode;
     }
 
+    //Returns the first Node (the head), nullptr if the list is empty
+    Node<T> *firstNode() const { return head; }
+
     //Checks list for a value in the list
-    bool isValueInList(T value) {
-        Node<T> *temp = head;
-        while (temp != nullptr) {
+    bool isValueInList(const T &value) const {
+        for (Node<T> *temp = head; temp != nullptr; temp = temp->next)
             if (temp->data == value) return true;
-            temp = temp->next;
-        }
         return false;
     }
 
-    //Return the the Node in that position of the list (first is 0)
-    Node<T> *nodeAtPos(int pos) {
+    //Return the Node in that position of the list (first is 0), nullptr if out of range
+    Node<T> *nodeAtPos(int pos) const {
         Node<T> *temp = head;
         for (int i = 0; i < pos && temp != nullptr; i++) temp = temp->next;
         return temp;
@@ -90,13 +90,13 @@ public:
             std::cout << temp->data << "\n";
     }
 
-    //Delete the first item in the list
+    //Deletes the first Node
     void deleteFromHead() {
-        count--;
         if (head == nullptr) return;
         Node<T> *old = head;
         head = head->next;
         delete old;
+        count--;
     }
 
     //Clears the list (used in the destructor)
