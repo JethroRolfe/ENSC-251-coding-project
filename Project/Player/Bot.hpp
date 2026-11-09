@@ -45,3 +45,5 @@ private:
 };
 
 #endif //PROJECT_BOT_HPP
+
+//added for a diff, no comment was add to the push :(
