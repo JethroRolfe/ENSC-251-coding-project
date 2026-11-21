@@ -13,8 +13,7 @@
 
 #include <iostream>
 #include "deck.hpp"
-
-class PlayHand;
+#include "PlayHand.hpp"
 
 class DeckManager {
 public:
@@ -27,7 +26,7 @@ public:
     explicit DeckManager(bool powerCards = false);
 
     //Destructor (each Deck frees its own cards)
-    ~DeckManager() = default;
+    ~DeckManager();
 
     //Changes the deck that startNewRound() builds (custom decks)
     void setDeckSize(int rankSize, int suitSize, int numJokers);
