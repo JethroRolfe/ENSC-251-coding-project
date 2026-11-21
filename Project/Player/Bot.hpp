@@ -28,11 +28,11 @@ public:
 
     [[nodiscard]] int swapCardWith() override;
 
-    [[nodiscard]] int choosePosition(const std::string &prompt);
+    [[nodiscard]] int choosePosition(const std::string &prompt) override;
 
     [[nodiscard]] int chooseOpponent(Player **players, int numPlayers, int self) override;
 
-    [[nodiscard]] bool askYesNo(const std::string &question);
+    [[nodiscard]] bool askYesNo(const std::string &question) override;
 
     [[nodiscard]] bool knock() override;
 
@@ -45,3 +45,5 @@ private:
 };
 
 #endif //PROJECT_BOT_HPP
+
+//added for a diff, no comment was add to the push :(
