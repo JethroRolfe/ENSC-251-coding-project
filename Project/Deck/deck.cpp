@@ -3,8 +3,8 @@
 //
 #include "deck.hpp"
 
-#include <algorithm>
 #include <random>
+#include <utility>
 
 //Default constructor, Creates an empty deck (0 cards)
 Deck::Deck() = default;
@@ -31,6 +31,25 @@ bool Deck::isEmpty() const { return cardList.isEmpty(); }
 //Gets num of Cards in a deck
 int Deck::getNumCards() const { return cardList.getCount(); }
 
+//Returns a vector of the numbers 0 to range-1 in a random order
+std::vector<int> Deck::randomVector(int range) {
+    std::vector<int> temp(range);
+    for (int i = 0; i < range; i++) { // 0,1,2,3,...
+        temp[i] = i;
+    }
+
+    //Seeded once; a new random_device every loop is slow and can repeat
+    static std::mt19937 gen(std::random_device{}());
+
+    for (int i = 0; i < range - 1; i++) {
+        // get random number from i to the last index (range - 1)
+        std::uniform_int_distribution<int> distr(i, range - 1);
+        int random = distr(gen);
+        std::swap(temp[i], temp[random]);
+    }
+    return temp;
+}
+
 //Draws the top card and returns it
 Card Deck::drawTopCard() {
     if (cardList.isEmpty()) {
@@ -56,6 +75,18 @@ Card Deck::peekTopCard() const {
 
 void Deck::clear() { cardList.clear(); }
 
+//Copies the cards into a vector, then rebuilds the list in the order from randomVector()
+void Deck::shuffle() {
+    std::vector<Card> cards;
+    for (Node<Card> *temp = cardList.getHead(); temp != nullptr; temp = temp->next)
+        cards.push_back(temp->data);
+
+    std::vector<int> order = randomVector(static_cast<int>(cards.size()));
+
+    cardList.clear();
+    for (int i: order) cardList.insertAtTail(cards[i]);
+}
+
 //Prints the whole deck
 void Deck::printDeck(std::ostream &outs) const {
     int i = 1;
@@ -63,24 +94,26 @@ void Deck::printDeck(std::ostream &outs) const {
         outs << i++ << ". " << temp->data << "\n";
 }
 
-//Builds the deck in the order given by index (see deck.hpp for the formula)
-void Deck::genDeck(const int index[], const int size, const int rankSize, const int suitSize) {
+//Builds the deck in the order given by randomVector() (see deck.hpp for the formula)
+bool Deck::genDeck(int rankSize, int suitSize, int numJokers) {
     cardList.clear();
-    for (int i = 0; i < size; i++) {
-        const int k = index[i];
-        if (k >= rankSize * suitSize) {
-            cardList.insertAtTail(Card(Rank::Joker, Suit::Clubs));
+
+    if (rankSize < 1 || rankSize > static_cast<int>(Rank::King) ||
+        suitSize < 1 || suitSize > static_cast<int>(Suit::Spades) + 1 || numJokers < 0) {
+        std::cerr << "ERROR: Invalid deck size (ranks: " << rankSize << ", suits: "
+                  << suitSize << ", jokers: " << numJokers << ")\n";
+        return false;
+    }
+
+    const int numNormal = rankSize * suitSize; // cards that are not Jokers
+    std::vector<int> temp = randomVector(numNormal + numJokers);
+
+    for (int index: temp) {
+        if (index < numNormal) {
+            cardList.insertAtTail(Card(index, suitSize)); // index constructor does the rank/suit math
         } else {
-            cardList.insertAtTail(Card(k / suitSize + 1, k % suitSize));
+            cardList.insertAtTail(Card(Rank::Joker, Suit::Clubs)); // suit unused for Jokers
         }
     }
-}
-
-//Shuffled array of 0 to size-1
-std::vector<int> Deck::genIndex(const int size) {
-    std::vector<int> index(size);
-    for (int i = 0; i < size; i++) index[i] = i;
-    static std::mt19937 rng(std::random_device{}());
-    std::shuffle(index.begin(), index.end(), rng);
-    return index;
+    return true;
 }

@@ -19,7 +19,7 @@ class DeckManager {
 public:
     static const int SUIT_SIZE = 4;
     static const int RANK_SIZE_MIN_GAME = 10; // Ace to 10
-    static const int RANK_SIZE_POWER = 13;    // Ace to King
+    static const int RANK_SIZE_Full_Game = 13;    // Ace to King
     static const int NUM_JOKERS = 2;
 
     //powerCards = false for the minimum game (42 cards)

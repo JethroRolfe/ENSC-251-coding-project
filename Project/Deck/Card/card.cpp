@@ -44,8 +44,9 @@ Card::Card(const Rank r, const Suit s) : rank(r), suit(s) {
     (void) isValid();
 }
 
-//Card constructor from ints, with isValid check on rank and suit
-Card::Card(const int r, const int s) : rank(static_cast<Rank>(r)), suit(static_cast<Suit>(s)) {
+//Card from a deck index (see Deck::genDeck), with isValid check on rank and suit
+Card::Card(const int index, const int suitSize)
+    : rank(static_cast<Rank>(index / suitSize + 1)), suit(static_cast<Suit>(index % suitSize)) {
     (void) isValid();
 }
 
@@ -61,9 +62,9 @@ bool Card::isValid() const {
     return true;
 }
 
-Rank Card::getRank() const { return rank; }
+int Card::getRank() const { return static_cast<int>(rank); }
 
-Suit Card::getSuit() const { return suit; }
+int Card::getSuit() const { return static_cast<int>(suit); }
 
 //Point value in the game: rank + suit, Joker = 0, power cards = 0 (replaced before scoring)
 int Card::rankValue() const {
@@ -116,7 +117,7 @@ std::istream &operator>>(std::istream &ins, Card &c) {
         return ins >> c;
     }
 
-    c = Card(newRank, newSuit);
+    c = Card(static_cast<Rank>(newRank), static_cast<Suit>(newSuit));
     return ins;
 }
 

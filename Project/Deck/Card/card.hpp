@@ -49,10 +49,12 @@ public:
     //Default constructor: Ace of Clubs
     Card();
 
+    //Callers that start with ints use static_cast<Rank>(r), static_cast<Suit>(s)
     Card(Rank r, Suit s);
 
-    //Used when reading or generating cards from ints
-    Card(int r, int s);
+    //Builds a card from a deck index (used by Deck::genDeck):
+    //  rank = index / suitSize + 1, suit = index % suitSize
+    Card(int index, int suitSize);
 
     //Destructor (no dynamic memory)
     ~Card() = default;
@@ -61,9 +63,9 @@ public:
     [[nodiscard]] bool isValid() const;
 
     //Getters, used by GameRules to switch on King/Queen/Jack
-    [[nodiscard]] Rank getRank() const;
+    [[nodiscard]] int getRank() const;
 
-    [[nodiscard]] Suit getSuit() const;
+    [[nodiscard]] int getSuit() const;
 
     //Returns the point value of a Card in the game: rank + suit (rules).
     //Joker = 0. Power cards (Jack, Queen, King) return 0; they are replaced

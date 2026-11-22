@@ -6,7 +6,7 @@
 // DeckManager uses two: the active draw pile and the discard pile.
 //
 // Custom decks (rules: Contents): a deck is rankSize ranks x suitSize suits,
-// plus Jokers. genIndex() makes a shuffled array of ints 0 to size-1 and
+// plus Jokers. randomVector() makes a shuffled array of ints 0 to size-1 and
 // genDeck() turns each int into a card:
 //     rank = index / suitSize + 1   (names from the Rank enum: Ace, 2..10, Jack, Queen, King)
 //     suit = index % suitSize
@@ -23,9 +23,6 @@
 #include "Card/singularLinkedList.hpp"
 
 class Deck {
-private:
-    singularLinkedList<Card> cardList; // Linked list of Cards, head = top
-
 public:
     //Default constructor (empty deck)
     Deck();
@@ -55,15 +52,23 @@ public:
     //Removes every card
     void clear();
 
+    //Shuffles the cards already in the deck (used when the discard pile
+    //becomes the new draw pile)
+    void shuffle();
+
     //Prints the Deck
     void printDeck(std::ostream &outs) const;
 
-    //Generates the deck from an array of ints made by genIndex().
+    //Generates the deck from an array of ints made by randomVector().
     //size = rankSize * suitSize + numJokers. Clears the deck first.
-    void genDeck(const int index[], int size, int rankSize, int suitSize);
+    //rankSize 1-13, suitSize 1-4; returns false (deck left empty) if out of range.
+    bool genDeck(int rankSize, int suitSize, int numJokers);
 
-    //Uses a vector to shuffle a sorted array 0 to size-1, giving the card placements
-    [[nodiscard]] static std::vector<int> genIndex(int size);
+private:
+    singularLinkedList<Card> cardList; // Linked list of Cards, head = top
+
+    //Returns the numbers 0 to range-1 in a random order (Fisher-Yates shuffle)
+    static std::vector<int> randomVector(int range);
 };
 
 #endif //PROJECT_DECK_HPP
