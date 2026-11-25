@@ -51,6 +51,9 @@ public:
 
     //Explains a specific power card's rule
     void explainCard(const Card &card, std::ostream &outs) const;
+    void explainPeek(std::ostream &outs) const;
+    void explainSwap(std::ostream &outs) const;
+    void explainDrawTwo(std::ostream &outs) const;
 
     //Explains the player's available options
     void explainRules(std::ostream &outs) const;

@@ -1,5 +1,6 @@
 //
 // Created by Jet on 11/7/2026.
+// last edited by ayden on 11/24/2026 (line 79)
 //
 // PlayHand: a player's four face-down cards kept in fixed positions 1 to 4,
 // plus 2 temp locations for cards that have been drawn but not placed yet
@@ -74,7 +75,8 @@ public:
     void clear();
 
     //Prints the hand as [?] [?] [?] [?]; in easy mode the known cards are revealed
-    void printHidden(std::ostream &outs, bool easyMode = false) const;
+    // void printHidden(std::ostream &outs, bool easyMode = false) const; // original version
+    void printHidden(std::ostream &outs, bool easyMode) const; // ayden's version
 
     //Prints all four cards at the end of the round
     void printRevealed(std::ostream &outs) const;
