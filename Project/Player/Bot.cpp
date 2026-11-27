@@ -4,7 +4,7 @@
 
 #include "Bot.hpp"
 
-Bot::Bot(const std::string &name) {//
+Bot::Bot(const std::string &name) {
 }
 
 bool Bot::isBot() const {
